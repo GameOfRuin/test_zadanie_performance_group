@@ -1,0 +1,11 @@
+services:
+  postgres:
+    container_name: test_zadani_postgres
+    image: postgres:17-alpine
+    restart: unless-stopped
+    ports:
+      - "5456:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+      POSTGRES_DB: backend
