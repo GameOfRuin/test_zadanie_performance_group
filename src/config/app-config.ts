@@ -7,8 +7,19 @@ import { AppConfigDto } from './dto';
 
 readEnv();
 
-const rawConfig = {
+type EnvStructure<T = unknown> = {
+  [Key in keyof T]: T[Key] extends object ? EnvStructure<T[Key]> : string | undefined;
+};
+
+const rawConfig: EnvStructure = {
   port: process.env.PORT,
+  postgres: {
+    host: process.env.POSTGRES_HOST,
+    port: process.env.POSTGRES_PORT,
+    username: process.env.POSTGRES_USER,
+    password: process.env.POSTGRES_PASSWORD,
+    database: process.env.POSTGRES_DB,
+  },
 };
 
 export const appConfig = plainToInstance(AppConfigDto, rawConfig);
