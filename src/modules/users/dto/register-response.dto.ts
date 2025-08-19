@@ -23,16 +23,21 @@ export class RegisterResponseDto {
 
   @ApiProperty({
     example: 'Alex Parker',
-    description: 'Полное имя пользователя, от 2 до 50 символов.',
   })
   @IsString()
   @MinLength(2)
   @MaxLength(50)
   name: string;
 
+  @ApiProperty({
+    example: 'Alex Parker',
+  })
   @IsDate()
   updatedAt: Date;
 
+  @ApiProperty({
+    example: 'Alex Parker',
+  })
   @IsDate()
   createdAt: Date;
 }
