@@ -19,7 +19,7 @@ export enum Columns {
 
   authorId = 'authorId',
 
-  visibility = 'Visibility',
+  visibility = 'visibility',
 }
 export enum Visibility {
   public = 'public',

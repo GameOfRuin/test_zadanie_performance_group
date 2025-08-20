@@ -6,15 +6,16 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
-import { JwtGuard } from '../../guards/jwt.guard';
+import { JwtGuard, OptinolJwtGuard } from '../../guards/jwt.guard';
 import { IdNumberDto } from '../../shared';
 import { ArticleService } from './article.service';
-import { ArticleResponseDto, CreateArticleDto } from './dto';
+import { ArticleAllFindDto, ArticleResponseDto, CreateArticleDto } from './dto';
 import { ArticleUpdateDto } from './dto/article-update.dto';
 
 @Controller('article')
@@ -32,6 +33,7 @@ export class ArticleController {
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Поиск задачи по id' })
+  @UseGuards(OptinolJwtGuard)
   @Get('/:id')
   async getArticle(@Param() { id }: IdNumberDto) {
     return await this.articleService.getArticleById(id);
@@ -56,5 +58,15 @@ export class ArticleController {
     @Param() { id }: IdNumberDto,
   ) {
     return await this.articleService.updateArticle(dto, request.user.id, id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(OptinolJwtGuard)
+  @ApiCreatedResponse({ type: ArticleAllFindDto })
+  @ApiOperation({ summary: 'Поиск всех статей' })
+  @Get('/')
+  async getAllArticle(@Req() request: FastifyRequest, @Query() query: ArticleAllFindDto) {
+    const userId = request.user?.id;
+    return await this.articleService.getAllArticle(query, userId);
   }
 }

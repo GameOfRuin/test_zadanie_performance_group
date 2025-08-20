@@ -5,7 +5,7 @@ import { redisArticleKey } from '../../cache/cache.keys';
 import { CacheService } from '../../cache/cache.servise';
 import { ArticlesEntity, UserEntity } from '../../database/entities';
 import { TimeInSeconds } from '../../shared';
-import { CreateArticleDto } from './dto';
+import { ArticleAllFindDto, CreateArticleDto } from './dto';
 import { ArticleUpdateDto } from './dto/article-update.dto';
 
 @Injectable()
@@ -30,10 +30,9 @@ export class ArticleService {
 
     const newArticle = await ArticlesEntity.create({ ...dto, authorId: user.id });
 
-    await this.redis.set(redisArticleKey(newArticle.id), { newArticle }, { EX: 600 });
-
-    return newArticle;
+    return this.getArticleById(newArticle.id);
   }
+
   async getArticleById(idArticle: ArticlesEntity['id']) {
     this.logger.log(`Чтение задачи по id=${idArticle}`);
 
@@ -99,31 +98,38 @@ export class ArticleService {
     };
   }
 
-  async getAllArticle(query: any) {
+  async getAllArticle(query: ArticleAllFindDto, id?: UserEntity['id']) {
     this.logger.log('Getting articles');
 
-    const { limit, offset, sortDirection, sortBy, search } = query;
-
-    const tasks = await this.redis.get<ArticlesEntity>('3');
-    if (tasks) {
-      return tasks;
-    }
+    const { limit, offset, sortDirection, sortBy, tags } = query;
 
     const options: FindOptions = {
       offset,
       limit,
       order: [[sortBy, sortDirection]],
       include: [...this.joinAuthor],
+      where: { visibility: { [Op.eq]: 'public' } },
     };
 
-    if (search) {
-      const likePattern = `%${search}%`;
+    if (id) {
+      options.where = {
+        ...options.where,
+        visibility: { [Op.in]: ['private', 'public'] },
+      };
+    }
+
+    const tasks = await this.redis.get<ArticlesEntity>('3');
+
+    if (tasks) {
+      return tasks;
+    }
+
+    if (tags) {
+      const likePattern = `%${tags}%`;
       options.where = {
         ...options.where,
         [Op.or]: {
-          title: { [Op.iLike]: likePattern },
-          description: { [Op.iLike]: likePattern },
-          article: { [Op.iLike]: likePattern },
+          tags: { [Op.iLike]: likePattern },
         },
       };
     }
@@ -131,7 +137,7 @@ export class ArticleService {
     const { rows, count: total } = await ArticlesEntity.findAndCountAll(options);
 
     const response = { total, limit, offset, rows };
-    await this.redis.set(redisArticlesKey(query), response, {
+    await this.redis.set('redisArticlesKey(query)', response, {
       EX: 5 * TimeInSeconds.minute,
     });
 

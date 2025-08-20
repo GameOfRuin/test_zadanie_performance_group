@@ -1,12 +1,16 @@
-import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Post, Req, UseGuards } from '@nestjs/common';
 import {
+  ApiBearerAuth,
+  ApiBody,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
 import { JwtGuard } from '../../guards/jwt.guard';
 import { LoginDto, LoginTokensDto, RegisterDto } from './dto';
+import { DeleteUserDto } from './dto/delete-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
 import { UserService } from './users.service';
@@ -15,54 +19,62 @@ import { UserService } from './users.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @ApiOperation({
-    summary: 'Регистрация нового пользователя',
-    description: 'Создаёт нового пользователя в системе.',
-  })
+  @ApiOperation({ summary: 'Регистрация нового пользователя' })
   @ApiCreatedResponse({
     type: RegisterResponseDto,
     description: 'Пользователь успешно зарегистрирован',
   })
+  @ApiBody({ type: RegisterDto, description: 'Данные для регистрации пользователя' })
   @Post('register')
-  @HttpCode(201)
   async register(@Body() dto: RegisterDto) {
     return this.userService.register(dto);
   }
 
-  @ApiOperation({ summary: 'Логин' })
-  @ApiCreatedResponse({
+  @ApiOperation({ summary: 'Логин пользователя' })
+  @ApiOkResponse({
     type: LoginTokensDto,
-    description: 'Пользователь успешно зарегистрирован',
+    description: 'Пользователь успешно вошёл в систему и получил токены',
   })
+  @ApiBody({ type: LoginDto, description: 'Email и пароль пользователя' })
   @ApiUnauthorizedResponse({ description: 'Неверный email или пароль' })
-  @HttpCode(200)
   @Post('login')
-  async login(@Body() dto: LoginDto): Promise<LoginTokensDto> {
+  async login(@Body() dto: LoginDto) {
     return this.userService.login(dto);
   }
 
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Логаут пользователя' })
-  @ApiCreatedResponse({
-    description: 'message: Выполнен выход',
+  @ApiOkResponse({ description: '{ message: "Выполнен выход" }' })
+  @ApiBody({ type: RefreshTokenDto, description: 'Refresh-токен для выхода' })
+  @ApiUnauthorizedResponse({
+    description: 'Недействительный refresh-token или пользователь не авторизован',
   })
-  @ApiUnauthorizedResponse({ description: 'Неверный email или пароль' })
   @UseGuards(JwtGuard)
-  @HttpCode(200)
   @Post('logout')
   async logout(@Body() dto: RefreshTokenDto, @Req() request: FastifyRequest) {
     return await this.userService.logout(dto.refreshToken, request.user);
   }
 
-  @ApiOperation({ summary: 'бновление refresh-token' })
-  @ApiCreatedResponse({
-    type: RefreshTokenDto,
-    description: 'Refresh-token обновлен',
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Обновление токенов пользователя' })
+  @ApiOkResponse({
+    type: LoginTokensDto,
+    description: 'Новые access- и refresh-токены успешно выданы',
   })
-  @ApiUnauthorizedResponse({ description: 'Неизвестый refresh-token' })
+  @ApiBody({ type: RefreshTokenDto, description: 'Refresh-токен для обновления токенов' })
+  @ApiUnauthorizedResponse({ description: 'Неизвестный или просроченный refresh-token' })
   @UseGuards(JwtGuard)
-  @HttpCode(200)
   @Post('refresh')
   async refresh(@Body() dto: RefreshTokenDto, @Req() request: FastifyRequest) {
     return this.userService.refresh(dto.refreshToken, request.user);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Удаление пользователя' })
+  @ApiOkResponse({ description: '{ message: "Пользователь успешно удален" }' })
+  @Delete('/')
+  async delete(@Body() dto: DeleteUserDto) {
+    return this.userService.delete(dto.id);
   }
 }
