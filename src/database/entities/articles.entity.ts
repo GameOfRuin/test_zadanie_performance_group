@@ -40,7 +40,7 @@ export class ArticlesEntity extends Model {
     type: DataType.STRING,
     allowNull: true,
   })
-  public tags: string;
+  public tags?: string;
 
   @ForeignKey(() => UserEntity)
   @Column({

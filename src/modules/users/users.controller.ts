@@ -25,7 +25,7 @@ export class UserController {
   })
   @Post('register')
   @HttpCode(201)
-  async register(@Body() dto: RegisterDto): Promise<RegisterResponseDto> {
+  async register(@Body() dto: RegisterDto) {
     return this.userService.register(dto);
   }
 
@@ -43,7 +43,6 @@ export class UserController {
 
   @ApiOperation({ summary: 'Логаут пользователя' })
   @ApiCreatedResponse({
-    type: RefreshTokenDto,
     description: 'message: Выполнен выход',
   })
   @ApiUnauthorizedResponse({ description: 'Неверный email или пароль' })
@@ -64,6 +63,6 @@ export class UserController {
   @HttpCode(200)
   @Post('refresh')
   async refresh(@Body() dto: RefreshTokenDto, @Req() request: FastifyRequest) {
-    return await this.userService.refresh(dto.refreshToken, request.user);
+    return this.userService.refresh(dto.refreshToken, request.user);
   }
 }
