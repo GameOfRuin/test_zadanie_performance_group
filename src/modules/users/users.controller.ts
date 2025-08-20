@@ -46,10 +46,11 @@ export class UserController {
     description: 'Пользователь успешно зарегистрирован',
   })
   @ApiUnauthorizedResponse({ description: 'Неверный email или пароль' })
+  @UseGuards(JwtGuard)
   @HttpCode(200)
   @Post('logout')
-  async logout(@Body() dto: RefreshTokenDto) {
-    return await this.userService.logout(dto.refreshToken);
+  async logout(@Body() dto: RefreshTokenDto, @Req() request: FastifyRequest) {
+    return await this.userService.logout(dto.refreshToken, request.user);
   }
 
   @ApiOperation({ summary: 'бновление refresh-token' })

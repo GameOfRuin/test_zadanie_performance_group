@@ -60,11 +60,16 @@ export class UserService {
     return this.getTokenPair(user);
   }
 
-  async logout(refreshToken: RefreshTokenDto['refreshToken']) {
+  async logout(refreshToken: RefreshTokenDto['refreshToken'], user: UserEntity) {
     this.logger.verbose(`Пришел запрос на логаут`);
 
     const token = await this.cacheService.get(redisRefreshToken(refreshToken));
     if (!token) {
+      throw new UnauthorizedException('Не верный токен');
+    }
+
+    const { id } = token;
+    if (id !== user.id) {
       throw new UnauthorizedException('Не верный токен');
     }
 
@@ -92,7 +97,7 @@ export class UserService {
     refreshToken: RefreshTokenDto['refreshToken'],
     user: UserEntity,
   ): Promise<LoginTokensDto> {
-    await this.logout(refreshToken);
+    await this.logout(refreshToken, user);
 
     return this.getTokenPair(user);
   }
