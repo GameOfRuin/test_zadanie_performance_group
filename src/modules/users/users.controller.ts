@@ -43,7 +43,8 @@ export class UserController {
 
   @ApiOperation({ summary: 'Логаут пользователя' })
   @ApiCreatedResponse({
-    description: 'Пользователь успешно зарегистрирован',
+    type: RefreshTokenDto,
+    description: 'message: Выполнен выход',
   })
   @ApiUnauthorizedResponse({ description: 'Неверный email или пароль' })
   @UseGuards(JwtGuard)
@@ -55,6 +56,7 @@ export class UserController {
 
   @ApiOperation({ summary: 'бновление refresh-token' })
   @ApiCreatedResponse({
+    type: RefreshTokenDto,
     description: 'Refresh-token обновлен',
   })
   @ApiUnauthorizedResponse({ description: 'Неизвестый refresh-token' })
