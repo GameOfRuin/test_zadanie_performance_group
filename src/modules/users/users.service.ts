@@ -48,7 +48,6 @@ export class UserService {
     const user = await UserEntity.findOne({
       where: { email: dto.email },
     });
-
     if (!user) {
       throw new UnauthorizedException('Неверный логин или пароль');
     }
@@ -66,7 +65,7 @@ export class UserService {
 
     const token = await this.cacheService.get(redisRefreshToken(refreshToken));
     if (!token) {
-      throw new UnauthorizedException(refreshToken);
+      throw new UnauthorizedException('Не верный токен');
     }
 
     await this.cacheService.delete(redisRefreshToken(refreshToken));
@@ -87,5 +86,14 @@ export class UserService {
     );
 
     return tokens;
+  }
+
+  async refresh(
+    refreshToken: RefreshTokenDto['refreshToken'],
+    user: UserEntity,
+  ): Promise<LoginTokensDto> {
+    await this.logout(refreshToken);
+
+    return this.getTokenPair(user);
   }
 }

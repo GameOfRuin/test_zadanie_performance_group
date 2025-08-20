@@ -1,9 +1,11 @@
-import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, UseGuards } from '@nestjs/common';
 import {
   ApiCreatedResponse,
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { FastifyRequest } from 'fastify';
+import { JwtGuard } from '../../guards/jwt.guard';
 import { LoginDto, LoginTokensDto, RegisterDto } from './dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
@@ -50,15 +52,15 @@ export class UserController {
     return await this.userService.logout(dto.refreshToken);
   }
 
-  //   @ApiOperation({ summary: 'бновление refresh-token' })
-  //   @ApiCreatedResponse({
-  //     description: 'Refresh-token обновлен',
-  //   })
-  //   @ApiUnauthorizedResponse({ description: 'Неизвестый refresh-token' })
-  //   @HttpCode(200)
-  //   @Post('refresh')
-  //   async refresh(@Body() dto: LoginTokensDto['refreshSecret']) {
-  //     return await this.userService.logout(dto);
-  //   }
-  // }
+  @ApiOperation({ summary: 'бновление refresh-token' })
+  @ApiCreatedResponse({
+    description: 'Refresh-token обновлен',
+  })
+  @ApiUnauthorizedResponse({ description: 'Неизвестый refresh-token' })
+  @UseGuards(JwtGuard)
+  @HttpCode(200)
+  @Post('refresh')
+  async refresh(@Body() dto: RefreshTokenDto, @Req() request: FastifyRequest) {
+    return await this.userService.refresh(dto.refreshToken, request.user);
+  }
 }
