@@ -1,6 +1,6 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { inject } from 'inversify';
-import { Includeable } from 'sequelize';
+import { FindOptions, Includeable, Op } from 'sequelize';
 import { redisArticleKey } from '../../cache/cache.keys';
 import { CacheService } from '../../cache/cache.servise';
 import { ArticlesEntity, UserEntity } from '../../database/entities';
@@ -97,5 +97,44 @@ export class ArticleService {
     return {
       success: true,
     };
+  }
+
+  async getAllArticle(query: any) {
+    this.logger.log('Getting articles');
+
+    const { limit, offset, sortDirection, sortBy, search } = query;
+
+    const tasks = await this.redis.get<ArticlesEntity>('3');
+    if (tasks) {
+      return tasks;
+    }
+
+    const options: FindOptions = {
+      offset,
+      limit,
+      order: [[sortBy, sortDirection]],
+      include: [...this.joinAuthor],
+    };
+
+    if (search) {
+      const likePattern = `%${search}%`;
+      options.where = {
+        ...options.where,
+        [Op.or]: {
+          title: { [Op.iLike]: likePattern },
+          description: { [Op.iLike]: likePattern },
+          article: { [Op.iLike]: likePattern },
+        },
+      };
+    }
+
+    const { rows, count: total } = await ArticlesEntity.findAndCountAll(options);
+
+    const response = { total, limit, offset, rows };
+    await this.redis.set(redisArticlesKey(query), response, {
+      EX: 5 * TimeInSeconds.minute,
+    });
+
+    return response;
   }
 }
