@@ -9,10 +9,10 @@ import { inject } from 'inversify';
 import { redisRefreshToken } from '../../cache/cache.keys';
 import { CacheService } from '../../cache/cache.servise';
 import { UserEntity } from '../../database/entities';
+import { TimeInSeconds } from '../../shared';
 import { JwtService } from '../jwt/jwt.service';
-import { LoginDto, LoginTokensDto, RegisterDto } from './dto';
+import { LoginDto, RegisterDto } from './dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { RegisterResponseDto } from './dto/register-response.dto';
 
 @Injectable()
 export class UserService {
@@ -25,7 +25,7 @@ export class UserService {
     private readonly cacheService: CacheService,
   ) {}
 
-  async register(dto: RegisterDto): Promise<RegisterResponseDto> {
+  async register(dto: RegisterDto) {
     this.logger.verbose(`Регистрация нового пользователя email=${dto.email}`);
 
     const exist = await UserEntity.findOne({ where: { email: dto.email } });
@@ -39,10 +39,10 @@ export class UserService {
 
     const { password, ...user } = newUser.toJSON();
 
-    return user as RegisterResponseDto;
+    return user;
   }
 
-  async login(dto: LoginDto): Promise<LoginTokensDto> {
+  async login(dto: LoginDto) {
     this.logger.verbose(`Пришли данные для логина. email = ${dto.email}`);
 
     const user = await UserEntity.findOne({
@@ -78,7 +78,7 @@ export class UserService {
     return { message: 'Произошел выход' };
   }
 
-  async getTokenPair(user: UserEntity): Promise<LoginTokensDto> {
+  async getTokenPair(user: UserEntity) {
     const tokens = this.jwtService.makeTokenPair(user);
     const { id } = user;
 
@@ -86,19 +86,24 @@ export class UserService {
       redisRefreshToken(tokens.refreshSecret),
       { id },
       {
-        EX: 6000,
+        EX: TimeInSeconds.day,
       },
     );
 
     return tokens;
   }
 
-  async refresh(
-    refreshToken: RefreshTokenDto['refreshToken'],
-    user: UserEntity,
-  ): Promise<LoginTokensDto> {
+  async refresh(refreshToken: RefreshTokenDto['refreshToken'], user: UserEntity) {
     await this.logout(refreshToken, user);
 
     return this.getTokenPair(user);
+  }
+
+  async delete(id: UserEntity['id']) {
+    this.logger.warn('Запрос на удаления пользователя');
+
+    await UserEntity.destroy({ where: { id } });
+
+    return { message: 'Пользователь успешно удален' };
   }
 }

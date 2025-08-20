@@ -9,35 +9,40 @@ import {
 } from 'class-validator';
 
 export class RegisterResponseDto {
-  @ApiProperty({
-    example: 'john@gmail.com',
-  })
   @IsNumber()
+  @ApiProperty({
+    description: 'Уникальный идентификатор пользователя',
+    example: 1,
+  })
   id: number;
 
+  @IsEmail()
   @ApiProperty({
+    description: 'Email зарегистрированного пользователя',
     example: 'john@gmail.com',
   })
-  @IsEmail({})
   email: string;
 
-  @ApiProperty({
-    example: 'Alex Parker',
-  })
   @IsString()
   @MinLength(2)
   @MaxLength(50)
+  @ApiProperty({
+    description: 'Имя пользователя',
+    example: 'Alex Parker',
+  })
   name: string;
 
-  @ApiProperty({
-    example: 'Alex Parker',
-  })
   @IsDate()
-  updatedAt: Date;
-
   @ApiProperty({
-    example: 'Alex Parker',
+    description: 'Дата и время создания пользователя',
+    example: '2025-08-20T19:00:00.000Z',
   })
-  @IsDate()
   createdAt: Date;
+
+  @IsDate()
+  @ApiProperty({
+    description: 'Дата и время последнего обновления данных пользователя',
+    example: '2025-08-20T19:15:00.000Z',
+  })
+  updatedAt: Date;
 }
