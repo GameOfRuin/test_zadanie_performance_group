@@ -37,4 +37,28 @@ export class UserController {
   async login(@Body() dto: LoginDto): Promise<LoginTokensDto> {
     return this.userService.login(dto);
   }
+
+  @ApiOperation({ summary: 'Логаут пользователя' })
+  @ApiCreatedResponse({
+    type: LoginTokensDto,
+    description: 'Пользователь успешно зарегистрирован',
+  })
+  @ApiUnauthorizedResponse({ description: 'Неверный email или пароль' })
+  @HttpCode(200)
+  @Post('logout')
+  async logout(@Body() dto: LoginDto) {
+    return this.userService.login(dto);
+  }
+
+  @ApiOperation({ summary: 'бновление refresh-token' })
+  @ApiCreatedResponse({
+    type: LoginTokensDto,
+    description: 'Refresh-token обновлен',
+  })
+  @ApiUnauthorizedResponse({ description: 'Неизвестый refresh-token' })
+  @HttpCode(200)
+  @Post('refresh')
+  async refresh(@Body() dto: LoginDto) {
+    return this.userService.login(dto);
+  }
 }

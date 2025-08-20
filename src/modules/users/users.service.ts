@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { compare, hash } from 'bcrypt';
 import { inject } from 'inversify';
+import { redisRefreshToken } from '../../cache/cache.keys';
+import { CacheService } from '../../cache/cache.servise';
 import { UserEntity } from '../../database/entities';
 import { JwtService } from '../jwt/jwt.service';
 import { LoginDto, LoginTokensDto, RegisterDto } from './dto';
@@ -18,7 +20,10 @@ export class UserService {
   constructor(
     @inject(JwtService)
     private readonly jwtService: JwtService,
+    @inject(CacheService)
+    private readonly cacheService: CacheService,
   ) {}
+
   async register(dto: RegisterDto): Promise<RegisterResponseDto> {
     this.logger.verbose(`Регистрация нового пользователя email=${dto.email}`);
 
@@ -55,8 +60,18 @@ export class UserService {
     return this.getTokenPair(user);
   }
 
+  async logout() {}
   async getTokenPair(user: UserEntity): Promise<LoginTokensDto> {
     const tokens = this.jwtService.makeTokenPair(user);
+    const { id } = user;
+
+    await this.cacheService.set(
+      redisRefreshToken(tokens.refreshSecret),
+      { id },
+      {
+        EX: 6000,
+      },
+    );
 
     return tokens;
   }
