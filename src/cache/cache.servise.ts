@@ -7,12 +7,14 @@ export class CacheService {
   @Inject(REDIS)
   private readonly redis: RedisClientType;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async set(key: string, value: Record<string, any>, options?: SetOptions) {
     const json = JSON.stringify(value);
 
     return this.redis.set(key, json, options);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async get<T extends Record<string, any>>(key: string): Promise<T | null> {
     const value = await this.redis.get(key);
 
