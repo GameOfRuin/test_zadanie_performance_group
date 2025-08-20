@@ -22,7 +22,7 @@ import { FastifyRequest } from 'fastify';
 import { JwtGuard, OptinolJwtGuard } from '../../guards/jwt.guard';
 import { IdNumberDto } from '../../shared';
 import { ArticleService } from './article.service';
-import { ArticleAllFindDto, ArticleResponseDto, CreateArticleDto } from './dto';
+import { ArticleFindAllDto, ArticleResponseDto, CreateArticleDto } from './dto';
 import { ArticleUpdateDto } from './dto/article-update.dto';
 
 @Controller('article')
@@ -46,7 +46,7 @@ export class ArticleController {
     description: 'Статья найдена',
     type: ArticleResponseDto,
   })
-  @ApiNotFoundResponse({ description: 'Статья не найдена' })
+  @ApiNotFoundResponse({ description: 'Article not found' })
   @UseGuards(OptinolJwtGuard)
   @Get('/:id')
   async getArticleById(@Param() { id }: IdNumberDto, @Req() request: FastifyRequest) {
@@ -89,7 +89,7 @@ export class ArticleController {
   })
   @ApiOperation({ summary: 'Поиск всех статей' })
   @Get('/')
-  async getAllArticle(@Req() request: FastifyRequest, @Query() query: ArticleAllFindDto) {
+  async getAllArticle(@Req() request: FastifyRequest, @Query() query: ArticleFindAllDto) {
     const userId = request.user?.id;
     return await this.articleService.getAllArticle(query, userId);
   }

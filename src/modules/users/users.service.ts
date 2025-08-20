@@ -7,7 +7,7 @@ import {
 import { compare, hash } from 'bcrypt';
 import { inject } from 'inversify';
 import { redisRefreshToken } from '../../cache/cache.keys';
-import { CacheService } from '../../cache/cache.servise';
+import { CacheService } from '../../cache/cache.service';
 import { UserEntity } from '../../database/entities';
 import { TimeInSeconds } from '../../shared';
 import { JwtService } from '../jwt/jwt.service';
@@ -26,11 +26,11 @@ export class UserService {
   ) {}
 
   async register(dto: RegisterDto) {
-    this.logger.verbose(`Регистрация нового пользователя email=${dto.email}`);
+    this.logger.verbose(`Registering new user email=${dto.email}`);
 
     const exist = await UserEntity.findOne({ where: { email: dto.email } });
     if (exist) {
-      throw new ConflictException('Такой email уже зарегистрирован');
+      throw new ConflictException('This email is already registered');
     }
 
     dto.password = await hash(dto.password, 10);
@@ -43,39 +43,39 @@ export class UserService {
   }
 
   async login(dto: LoginDto) {
-    this.logger.verbose(`Пришли данные для логина. email = ${dto.email}`);
+    this.logger.verbose(`Login attempt with email= ${dto.email}`);
 
     const user = await UserEntity.findOne({
       where: { email: dto.email },
     });
     if (!user) {
-      throw new UnauthorizedException('Неверный логин или пароль');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     const { password } = user.toJSON();
     if (!(await compare(dto.password, password))) {
-      throw new UnauthorizedException('Неверный логин или пароль');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     return this.getTokenPair(user);
   }
 
   async logout(refreshToken: RefreshTokenDto['refreshToken'], user: UserEntity) {
-    this.logger.verbose(`Пришел запрос на логаут`);
+    this.logger.verbose(`Logout request received`);
 
     const token = await this.cacheService.get(redisRefreshToken(refreshToken));
     if (!token) {
-      throw new UnauthorizedException('Не верный токен');
+      throw new UnauthorizedException('Invalid token');
     }
 
     const { id } = token;
     if (id !== user.id) {
-      throw new UnauthorizedException('Не верный токен');
+      throw new UnauthorizedException('Invalid token');
     }
 
     await this.cacheService.delete(redisRefreshToken(refreshToken));
 
-    return { message: 'Произошел выход' };
+    return { message: 'Successfully logged out' };
   }
 
   async getTokenPair(user: UserEntity) {
@@ -100,10 +100,10 @@ export class UserService {
   }
 
   async delete(id: UserEntity['id']) {
-    this.logger.warn('Запрос на удаления пользователя');
+    this.logger.warn('Request to delete user');
 
     await UserEntity.destroy({ where: { id } });
 
-    return { message: 'Пользователь успешно удален' };
+    return { message: 'User successfully deleted' };
   }
 }

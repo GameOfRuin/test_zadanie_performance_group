@@ -1,4 +1,3 @@
-import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { FastifyAdapter } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
@@ -10,8 +9,6 @@ async function bootstrap() {
 
   bootstrapSwagger(app);
   bootstrapPipes(app);
-
-  const logger = new Logger('Bootstrap');
 
   await app.listen(appConfig.port);
 }

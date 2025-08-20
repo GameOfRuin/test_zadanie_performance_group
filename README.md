@@ -4,19 +4,22 @@
 Поддерживается авторизация пользователей, фильтрация статей, редис-кэширование.
 
 ## Установка зависимостей
-npm ci
+
+```npm ci```
+
 
 ## Запуск проекта в режиме разработки
-npm run start:dev
+```npm run start:dev```
 
 ## Сборка проекта
-npm run build
+```npm run build```
 
 ## Запуск готовой сборки
-npm run start:prod
+```npm run start:prod```
 
 ## Миграции базы данных:
-npm run migrate
+```npm run migrate```
+
 ### Откат миграций:
-npm run migrate:undo
+```npm run migrate:undo```
 

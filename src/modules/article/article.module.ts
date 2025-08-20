@@ -1,5 +1,5 @@
 import { Global, Module } from '@nestjs/common';
-import { CacheService } from '../../cache/cache.servise';
+import { CacheService } from '../../cache/cache.service';
 import { JwtService } from '../jwt/jwt.service';
 import { ArticleController } from './article.controller';
 import { ArticleService } from './article.service';

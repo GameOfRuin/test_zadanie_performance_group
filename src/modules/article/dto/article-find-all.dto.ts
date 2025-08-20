@@ -9,7 +9,7 @@ export enum ArticleSortByEnum {
   article = 'article',
 }
 
-export class ArticleAllFindDto extends PaginationDto {
+export class ArticleFindAllDto extends PaginationDto {
   @ApiPropertyOptional({
     description: 'Поле, по которому производится сортировка статей',
     enum: ArticleSortByEnum,

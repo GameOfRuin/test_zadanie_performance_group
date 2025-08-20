@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { CacheService } from '../../cache/cache.servise';
+import { CacheService } from '../../cache/cache.service';
 import { JwtService } from '../jwt/jwt.service';
 import { UserController } from './users.controller';
 import { UserService } from './users.service';

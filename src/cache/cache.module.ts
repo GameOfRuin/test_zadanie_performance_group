@@ -1,7 +1,7 @@
 import { Global, Inject, Module, OnApplicationShutdown } from '@nestjs/common';
 import { RedisClientType } from '@redis/client';
 import { REDIS, redisProvider } from './cache.provider';
-import { CacheService } from './cache.servise';
+import { CacheService } from './cache.service';
 
 @Global()
 @Module({

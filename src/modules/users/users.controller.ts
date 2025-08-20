@@ -44,7 +44,7 @@ export class UserController {
 
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Логаут пользователя' })
-  @ApiOkResponse({ description: '{ message: "Выполнен выход" }' })
+  @ApiOkResponse({ description: '{ message: Successfully logged out };' })
   @ApiBody({ type: RefreshTokenDto, description: 'Refresh-токен для выхода' })
   @ApiUnauthorizedResponse({
     description: 'Недействительный refresh-token или пользователь не авторизован',
@@ -72,7 +72,7 @@ export class UserController {
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
   @ApiOperation({ summary: 'Удаление пользователя' })
-  @ApiOkResponse({ description: '{ message: "Пользователь успешно удален" }' })
+  @ApiOkResponse({ description: '{ message: User successfully deleted }' })
   @Delete('/')
   async delete(@Body() dto: DeleteUserDto) {
     return this.userService.delete(dto.id);

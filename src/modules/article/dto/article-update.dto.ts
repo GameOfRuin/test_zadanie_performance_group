@@ -1,5 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsEnum,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 import { Visibility } from '../../../database/migrations/dictionary';
 
 export class ArticleUpdateDto {
@@ -22,14 +30,16 @@ export class ArticleUpdateDto {
   })
   description?: string;
 
-  @IsString()
-  @MaxLength(50)
   @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(10) // например, ограничим до 10 тегов
+  @IsString({ each: true }) // проверяем, что каждый элемент массива — строка
   @ApiPropertyOptional({
-    description: 'Теги статьи через запятую (до 50 символов)',
-    example: 'астрономия, космос, черные дыры',
+    description: 'Теги статьи в виде массива строк (например, ["астрономия", "космос"])',
+    example: ['астрономия', 'космос', 'черные дыры'],
+    type: [String],
   })
-  tags?: string;
+  tags?: string[];
 
   @IsEnum(Visibility)
   @IsOptional()
