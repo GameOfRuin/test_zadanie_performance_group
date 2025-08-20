@@ -37,6 +37,10 @@ module.exports = {
             type: DataType.STRING,
             allowNull: false,
           },
+          [Columns.visibility]: {
+            type: DataType.STRING,
+            allowNull: false,
+          },
           [Columns.description]: {
             type: DataType.STRING,
             allowNull: true,

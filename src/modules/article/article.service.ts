@@ -6,6 +6,7 @@ import { CacheService } from '../../cache/cache.servise';
 import { ArticlesEntity, UserEntity } from '../../database/entities';
 import { TimeInSeconds } from '../../shared';
 import { CreateArticleDto } from './dto';
+import { ArticleUpdateDto } from './dto/article-update.dto';
 
 @Injectable()
 export class ArticleService {
@@ -56,5 +57,45 @@ export class ArticleService {
     });
 
     return task.toJSON();
+  }
+
+  async updateArticle(
+    dto: ArticleUpdateDto,
+    userId: UserEntity['id'],
+    idArticle: ArticlesEntity['id'],
+  ) {
+    this.logger.log('Updating article');
+
+    const article = await this.getArticleById(idArticle);
+
+    if (article.authorId !== userId) {
+      throw new NotFoundException('Invalid article id');
+    }
+    await ArticlesEntity.update(dto, {
+      where: { id: idArticle },
+    });
+
+    await this.redis.delete(redisArticleKey(idArticle));
+
+    return await this.getArticleById(idArticle);
+  }
+
+  async delete(userId: UserEntity['id'], idArticle: ArticlesEntity['id']) {
+    this.logger.log('Deleting a article');
+
+    const article = await this.getArticleById(idArticle);
+
+    if (article.authorId !== userId) {
+      throw new NotFoundException('Invalid article id');
+    }
+
+    await this.redis.delete(redisArticleKey(idArticle));
+    await ArticlesEntity.destroy({
+      where: { id: idArticle },
+    });
+
+    return {
+      success: true,
+    };
   }
 }

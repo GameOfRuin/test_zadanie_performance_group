@@ -1,10 +1,21 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
 import { JwtGuard } from '../../guards/jwt.guard';
 import { IdNumberDto } from '../../shared';
 import { ArticleService } from './article.service';
 import { ArticleResponseDto, CreateArticleDto } from './dto';
+import { ArticleUpdateDto } from './dto/article-update.dto';
 
 @Controller('article')
 export class ArticleController {
@@ -24,5 +35,26 @@ export class ArticleController {
   @Get('/:id')
   async getArticle(@Param() { id }: IdNumberDto) {
     return await this.articleService.getArticleById(id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  @ApiOperation({ summary: 'Удаление статьи' })
+  @Delete('/:id')
+  async delete(@Req() request: FastifyRequest, @Param() { id }: IdNumberDto) {
+    return this.articleService.delete(request.user.id, id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtGuard)
+  @ApiCreatedResponse({ type: ArticleResponseDto })
+  @ApiOperation({ summary: 'Изменение статьи' })
+  @Put('/:id')
+  async updateArticle(
+    @Body() dto: ArticleUpdateDto,
+    @Req() request: FastifyRequest,
+    @Param() { id }: IdNumberDto,
+  ) {
+    return await this.articleService.updateArticle(dto, request.user.id, id);
   }
 }

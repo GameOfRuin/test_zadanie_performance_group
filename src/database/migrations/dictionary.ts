@@ -18,4 +18,10 @@ export enum Columns {
   article = 'article',
 
   authorId = 'authorId',
+
+  visibility = 'Visibility',
+}
+export enum Visibility {
+  public = 'public',
+  private = 'private',
 }

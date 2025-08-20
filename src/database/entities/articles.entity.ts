@@ -6,6 +6,7 @@ import {
   Model,
   Table,
 } from 'sequelize-typescript';
+import { Visibility } from '../migrations/dictionary';
 import { UserEntity } from './user.entity';
 
 @Table({ tableName: 'articles' })
@@ -41,6 +42,12 @@ export class ArticlesEntity extends Model {
     allowNull: true,
   })
   public tags?: string;
+
+  @Column({
+    type: DataType.ENUM(...Object.values(Visibility)),
+    allowNull: false,
+  })
+  public visibility: string;
 
   @ForeignKey(() => UserEntity)
   @Column({
