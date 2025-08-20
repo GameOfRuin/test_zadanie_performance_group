@@ -1,7 +1,7 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { inject } from 'inversify';
 import { FindOptions, Includeable, Op } from 'sequelize';
-import { redisArticleKey } from '../../cache/cache.keys';
+import { redisArticleKey, redisArticlesKey } from '../../cache/cache.keys';
 import { CacheService } from '../../cache/cache.servise';
 import { ArticlesEntity, UserEntity } from '../../database/entities';
 import { TimeInSeconds } from '../../shared';
@@ -33,22 +33,41 @@ export class ArticleService {
     return this.getArticleById(newArticle.id);
   }
 
-  async getArticleById(idArticle: ArticlesEntity['id']) {
+  async getArticleById(idArticle: ArticlesEntity['id'], userId?: UserEntity['id']) {
     this.logger.log(`Чтение задачи по id=${idArticle}`);
+
+    const options: FindOptions = {
+      where: { id: idArticle },
+      include: [...this.joinAuthor],
+    };
+
+    if (userId) {
+      options.where = {
+        ...options.where,
+        visibility: { [Op.in]: ['private', 'public'] },
+      };
+    } else {
+      options.where = {
+        ...options.where,
+        visibility: { [Op.like]: 'public' },
+      };
+    }
 
     const cacheTask = await this.redis.get<ArticlesEntity>(redisArticleKey(idArticle));
 
     if (cacheTask) {
+      if (cacheTask?.visibility === 'private') {
+        if (!userId) {
+          throw new NotFoundException(`Статья не найдена id=${idArticle}`);
+        }
+      }
       return cacheTask;
     }
 
-    const task = await ArticlesEntity.findOne({
-      where: { id: idArticle },
-      include: [...this.joinAuthor],
-    });
+    const task = await ArticlesEntity.findOne(options);
 
     if (!task) {
-      throw new NotFoundException('Такой задачи не найдено');
+      throw new NotFoundException('Такой статьи не найдено');
     }
 
     await this.redis.set(redisArticleKey(idArticle), task, {
@@ -65,10 +84,16 @@ export class ArticleService {
   ) {
     this.logger.log('Updating article');
 
-    const article = await this.getArticleById(idArticle);
+    const article = await ArticlesEntity.findOne({
+      where: { id: idArticle },
+      raw: true,
+    });
+    if (!article) {
+      throw new NotFoundException('Нельзя изменить задачу2');
+    }
 
     if (article.authorId !== userId) {
-      throw new NotFoundException('Invalid article id');
+      throw new NotFoundException('Нельзя изменить задачу');
     }
     await ArticlesEntity.update(dto, {
       where: { id: idArticle },
@@ -80,7 +105,7 @@ export class ArticleService {
   }
 
   async delete(userId: UserEntity['id'], idArticle: ArticlesEntity['id']) {
-    this.logger.log('Deleting a article');
+    this.logger.log('Запрос на удаление статьи');
 
     const article = await this.getArticleById(idArticle);
 
@@ -118,10 +143,13 @@ export class ArticleService {
       };
     }
 
-    const tasks = await this.redis.get<ArticlesEntity>('3');
+    const article = await this.redis.get(redisArticlesKey(query));
 
-    if (tasks) {
-      return tasks;
+    if (article) {
+      if (!id) {
+        return article.rows.filter((r) => r.visibility === 'public');
+      }
+      return article;
     }
 
     if (tags) {
@@ -137,7 +165,7 @@ export class ArticleService {
     const { rows, count: total } = await ArticlesEntity.findAndCountAll(options);
 
     const response = { total, limit, offset, rows };
-    await this.redis.set('redisArticlesKey(query)', response, {
+    await this.redis.set(redisArticlesKey(query), response, {
       EX: 5 * TimeInSeconds.minute,
     });
 

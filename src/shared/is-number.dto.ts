@@ -5,6 +5,9 @@ import { IsNumber } from 'class-validator';
 export class IdNumberDto {
   @IsNumber()
   @Type(() => Number)
-  @ApiProperty({ example: 4 })
+  @ApiProperty({
+    description: 'Уникальный идентификатор сущности',
+    example: 4,
+  })
   id: number;
 }

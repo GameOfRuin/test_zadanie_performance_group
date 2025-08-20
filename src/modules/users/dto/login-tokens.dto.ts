@@ -2,15 +2,17 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsString } from 'class-validator';
 
 export class LoginTokensDto {
-  @ApiProperty({
-    example: 'accessSecret',
-  })
   @IsString()
+  @ApiProperty({
+    description: 'JWT Access-токен для авторизации пользователя',
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+  })
   accessSecret: string;
 
-  @ApiProperty({
-    example: 'refreshSecret',
-  })
   @IsString()
+  @ApiProperty({
+    description: 'JWT Refresh-токен для обновления access-токена',
+    example: 'dGhpcy1pcy1hLXJlZnJlc2gtdG9rZW4...',
+  })
   refreshSecret: string;
 }

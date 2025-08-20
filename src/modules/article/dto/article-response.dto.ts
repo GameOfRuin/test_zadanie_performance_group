@@ -2,30 +2,58 @@ import { ApiProperty } from '@nestjs/swagger';
 import { UserIncludeDto } from '../../users/dto';
 
 export class ArticleResponseDto {
-  @ApiProperty({ example: 8 })
+  @ApiProperty({
+    description: 'Уникальный идентификатор статьи',
+    example: 8,
+  })
   id: number;
 
-  @ApiProperty({ example: 'Черный дыры ВСЁ!!!!!!!!' })
+  @ApiProperty({
+    description: 'Заголовок статьи',
+    example: 'Черные дыры: последние открытия и исследования',
+  })
   title: string;
 
-  @ApiProperty({ example: 'Самые новые данные по черным дырам ТАААМ ТАКОЕ' })
+  @ApiProperty({
+    description: 'Краткое описание статьи',
+    example: 'Статья о самых свежих данных по черным дырам и космическим событиям.',
+  })
   description: string;
 
-  @ApiProperty({ example: '' })
+  @ApiProperty({
+    description: 'Список тегов статьи через запятую',
+    example: 'астрономия, космос, черные дыры',
+  })
   tags: string;
 
-  @ApiProperty({ example: 'Очень большая статья' })
+  @ApiProperty({
+    description: 'Полный текст статьи',
+    example:
+      'В этой статье рассматриваются новые открытия в области черных дыр, их свойства и влияние на окружающее пространство. Приводятся примеры наблюдений и исследований последних лет.',
+  })
   article: string;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({
+    description: 'Идентификатор автора статьи',
+    example: 1,
+  })
   authorId: number;
 
-  @ApiProperty({ example: '2025-06-17T13:07:37.788Z' })
+  @ApiProperty({
+    description: 'Дата и время создания статьи',
+    example: '2025-06-17T13:07:37.788Z',
+  })
   createdAt: string;
 
-  @ApiProperty({ example: '2025-06-17T14:25:46.443Z' })
+  @ApiProperty({
+    description: 'Дата и время последнего обновления статьи',
+    example: '2025-06-17T14:25:46.443Z',
+  })
   updatedAt: string;
 
-  @ApiProperty({ type: UserIncludeDto })
+  @ApiProperty({
+    description: 'Данные автора статьи',
+    type: UserIncludeDto,
+  })
   author: UserIncludeDto;
 }

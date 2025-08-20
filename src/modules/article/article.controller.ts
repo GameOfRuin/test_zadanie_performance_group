@@ -10,7 +10,14 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
 import { JwtGuard, OptinolJwtGuard } from '../../guards/jwt.guard';
 import { IdNumberDto } from '../../shared';
@@ -24,7 +31,10 @@ export class ArticleController {
 
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
-  @ApiCreatedResponse({ type: ArticleResponseDto })
+  @ApiCreatedResponse({
+    description: 'Возвращает созданную статью',
+    type: ArticleResponseDto,
+  })
   @ApiOperation({ summary: 'Создание новой статьи' })
   @Post('create')
   async creatArticle(@Body() dto: CreateArticleDto, @Req() request: FastifyRequest) {
@@ -32,16 +42,23 @@ export class ArticleController {
   }
 
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Поиск задачи по id' })
+  @ApiOkResponse({
+    description: 'Статья найдена',
+    type: ArticleResponseDto,
+  })
+  @ApiNotFoundResponse({ description: 'Статья не найдена' })
   @UseGuards(OptinolJwtGuard)
   @Get('/:id')
-  async getArticle(@Param() { id }: IdNumberDto) {
-    return await this.articleService.getArticleById(id);
+  async getArticleById(@Param() { id }: IdNumberDto, @Req() request: FastifyRequest) {
+    const userId = request.user?.id;
+    return await this.articleService.getArticleById(id, userId);
   }
 
   @ApiBearerAuth()
   @UseGuards(JwtGuard)
-  @ApiOperation({ summary: 'Удаление статьи' })
+  @ApiOperation({ summary: '🗑 Удаление статьи' })
+  @ApiOkResponse({ description: 'Статья успешно удалена' })
+  @ApiForbiddenResponse({ description: 'Нет прав на удаление статьи' })
   @Delete('/:id')
   async delete(@Req() request: FastifyRequest, @Param() { id }: IdNumberDto) {
     return this.articleService.delete(request.user.id, id);
@@ -51,6 +68,10 @@ export class ArticleController {
   @UseGuards(JwtGuard)
   @ApiCreatedResponse({ type: ArticleResponseDto })
   @ApiOperation({ summary: 'Изменение статьи' })
+  @ApiOkResponse({
+    description: 'Возвращает обновлённую статью',
+    type: ArticleResponseDto,
+  })
   @Put('/:id')
   async updateArticle(
     @Body() dto: ArticleUpdateDto,
@@ -62,7 +83,10 @@ export class ArticleController {
 
   @ApiBearerAuth()
   @UseGuards(OptinolJwtGuard)
-  @ApiCreatedResponse({ type: ArticleAllFindDto })
+  @ApiOkResponse({
+    description: 'Список статей',
+    type: ArticleResponseDto,
+  })
   @ApiOperation({ summary: 'Поиск всех статей' })
   @Get('/')
   async getAllArticle(@Req() request: FastifyRequest, @Query() query: ArticleAllFindDto) {

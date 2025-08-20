@@ -3,15 +3,22 @@ import { Type } from 'class-transformer';
 import { IsNumber, IsOptional } from 'class-validator';
 
 export class PaginationDto {
-  @ApiProperty({ example: 'Лимит отображение. стандарт 10' })
   @IsNumber()
   @Type(() => Number)
   @IsOptional()
+  @ApiProperty({
+    description: 'Лимит отображаемых элементов на странице. По умолчанию 10',
+    example: 10,
+  })
   limit: number = 10;
 
-  @ApiProperty({ example: 'Страница отображения, стандарт 0' })
   @IsNumber()
   @Type(() => Number)
+  @IsOptional()
+  @ApiProperty({
+    description: 'Смещение для пагинации (страница). По умолчанию 0',
+    example: 0,
+  })
   offset: number = 0;
 }
 

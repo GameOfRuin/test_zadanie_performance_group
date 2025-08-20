@@ -1,9 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber, IsString } from 'class-validator';
 
 export class UserIncludeDto {
-  @ApiProperty({ example: 1 })
+  @IsNumber()
+  @ApiProperty({
+    description: 'Уникальный идентификатор пользователя',
+    example: 1,
+  })
   id: number;
 
-  @ApiProperty({ example: 'Alex Parker' })
+  @IsString()
+  @ApiProperty({
+    description: 'Имя пользователя',
+    example: 'Alex Parker',
+  })
   name: string;
 }

@@ -13,7 +13,6 @@ import { TimeInSeconds } from '../../shared';
 import { JwtService } from '../jwt/jwt.service';
 import { LoginDto, RegisterDto } from './dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { RegisterResponseDto } from './dto/register-response.dto';
 
 @Injectable()
 export class UserService {
@@ -40,7 +39,7 @@ export class UserService {
 
     const { password, ...user } = newUser.toJSON();
 
-    return user as RegisterResponseDto;
+    return user;
   }
 
   async login(dto: LoginDto) {

@@ -5,7 +5,8 @@ import { UserEntity } from '../../../database/entities';
 export class DeleteUserDto {
   @IsNumber()
   @ApiProperty({
-    example: 'Id пользователя, которого надо удалить',
+    description: 'ID пользователя, которого необходимо удалить',
+    example: 3,
   })
   id: UserEntity['id'];
 }

@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginationDto, SortDirectionEnum } from '../../../shared/pagination.dto';
 
@@ -10,17 +10,29 @@ export enum ArticleSortByEnum {
 }
 
 export class ArticleAllFindDto extends PaginationDto {
-  @ApiProperty({ example: 'Где осуществляется поиск например description' })
+  @ApiPropertyOptional({
+    description: 'Поле, по которому производится сортировка статей',
+    enum: ArticleSortByEnum,
+    example: ArticleSortByEnum.id,
+  })
   @IsEnum(ArticleSortByEnum)
   @IsOptional()
   sortBy: ArticleSortByEnum = ArticleSortByEnum.id;
 
-  @ApiProperty({ example: 'На убывание или на возрастание' })
+  @ApiPropertyOptional({
+    description: 'Направление сортировки: по возрастанию или убыванию',
+    enum: SortDirectionEnum,
+    example: SortDirectionEnum.asc,
+  })
   @IsEnum(SortDirectionEnum)
   @IsOptional()
   sortDirection: SortDirectionEnum = SortDirectionEnum.asc;
 
-  @ApiProperty({ example: 'Ключевое слово для поиска' })
+  @ApiPropertyOptional({
+    description: 'Ключевые слова для фильтрации статей по тегам',
+    type: String,
+    example: 'nestjs, redis',
+  })
   @IsString()
   @IsOptional()
   tags?: string;
