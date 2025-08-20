@@ -11,6 +11,7 @@ import { CacheService } from '../../cache/cache.servise';
 import { UserEntity } from '../../database/entities';
 import { JwtService } from '../jwt/jwt.service';
 import { LoginDto, LoginTokensDto, RegisterDto } from './dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterResponseDto } from './dto/register-response.dto';
 
 @Injectable()
@@ -60,7 +61,19 @@ export class UserService {
     return this.getTokenPair(user);
   }
 
-  async logout() {}
+  async logout(refreshToken: RefreshTokenDto['refreshToken']) {
+    this.logger.verbose(`Пришел запрос на логаут`);
+
+    const token = await this.cacheService.get(redisRefreshToken(refreshToken));
+    if (!token) {
+      throw new UnauthorizedException(refreshToken);
+    }
+
+    await this.cacheService.delete(redisRefreshToken(refreshToken));
+
+    return { message: 'Произошел выход' };
+  }
+
   async getTokenPair(user: UserEntity): Promise<LoginTokensDto> {
     const tokens = this.jwtService.makeTokenPair(user);
     const { id } = user;
