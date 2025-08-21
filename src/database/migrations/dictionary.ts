@@ -15,7 +15,7 @@ export enum Columns {
   title = 'title',
   tags = 'tags',
   description = 'description',
-  article = 'article',
+  text = 'text',
 
   authorId = 'authorId',
 

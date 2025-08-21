@@ -1,16 +1,17 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
 import { Visibility } from '../../../database/migrations/dictionary';
 
 export class CreateArticleDto {
   @IsString()
+  @IsOptional()
   @MinLength(3)
   @MaxLength(100)
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Название статьи (3–100 символов)',
     example: 'Черные дыры: новые открытия',
   })
-  title: string;
+  title?: string;
 
   @IsString()
   @MaxLength(250)
@@ -22,26 +23,32 @@ export class CreateArticleDto {
   description?: string;
 
   @IsOptional()
+  @IsString({ each: true })
   @ApiPropertyOptional({
-    description: 'Теги статьи передавать через массив, максимум 20 тегов',
-    example: 'астрономия, космос, черные дыры',
+    type: String,
+    isArray: true,
+    description: 'Теги статьи',
+    example: ['астрономия', 'космос', 'черные', 'дыры'],
   })
-  tags?: string[] | string;
+  tags?: string[];
 
+  @IsOptional()
   @IsEnum(Visibility)
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Приватная или публичная статья',
-    example: 'public',
+    enum: Visibility,
+    example: Visibility.public,
   })
-  visibility: Visibility;
+  visibility?: Visibility;
 
   @IsString()
+  @IsOptional()
   @MinLength(100)
   @MaxLength(3333)
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Полный текст статьи (100–3333 символа)',
     example:
       'В этой статье рассматриваются новые открытия в области черных дыр, их свойства и влияние на окружающее пространство. Приводятся примеры наблюдений и исследований последних лет.',
   })
-  article: string;
+  text?: string;
 }

@@ -45,7 +45,7 @@ export class ArticleUpdateDto {
   @IsOptional()
   @ApiPropertyOptional({
     description: 'Приватная или публичная статья',
-    example: 'public',
+    example: Visibility.public,
   })
   visibility?: Visibility;
 
@@ -58,5 +58,5 @@ export class ArticleUpdateDto {
     example:
       'В этой статье рассматриваются новые открытия в области черных дыр, их свойства и влияние на окружающее пространство. Приводятся примеры наблюдений и исследований последних лет.',
   })
-  article?: string;
+  text?: string;
 }

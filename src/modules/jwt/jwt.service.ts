@@ -8,9 +8,10 @@ export class JwtService {
   makeTokenPair(user: UserEntity) {
     const payload = { id: user.id };
 
-    const accessSecret = sign(payload, appConfig.jwt.accessSecret, { expiresIn: '1h' });
-    const refreshSecret = sign(payload, appConfig.jwt.refreshSecret, { expiresIn: '1w' });
-    return { accessSecret, refreshSecret };
+    const accessToken = sign(payload, appConfig.jwt.accessSecret, { expiresIn: '1h' });
+    const refreshToken = sign(payload, appConfig.jwt.refreshSecret, { expiresIn: '1w' });
+
+    return { accessToken, refreshToken };
   }
 
   verify(token: string, type: 'access' | 'refresh'): boolean {

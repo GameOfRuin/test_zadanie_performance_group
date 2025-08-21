@@ -46,13 +46,3 @@ export class JwtGuard implements CanActivate {
     return true;
   }
 }
-
-export class OptinolJwtGuard extends JwtGuard {
-  async canActivate(context: ExecutionContext) {
-    try {
-      return await super.canActivate(context);
-    } catch {
-      return true;
-    }
-  }
-}

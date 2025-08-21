@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Post, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiBody,
@@ -7,13 +7,12 @@ import {
   ApiOperation,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { FastifyRequest } from 'fastify';
+import { UserEntity } from '../../database/entities';
+import { User } from '../../decorators';
 import { JwtGuard } from '../../guards/jwt.guard';
-import { LoginDto, LoginTokensDto, RegisterDto } from './dto';
-import { DeleteUserDto } from './dto/delete-user.dto';
+import { LoginDto, LoginTokensDto, RegisterDto, RegisterResponseDto } from './dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
-import { RegisterResponseDto } from './dto/register-response.dto';
-import { UserService } from './users.service';
+import { UserService } from './user.service';
 
 @Controller('user')
 export class UserController {
@@ -51,8 +50,8 @@ export class UserController {
   })
   @UseGuards(JwtGuard)
   @Post('logout')
-  async logout(@Body() dto: RefreshTokenDto, @Req() request: FastifyRequest) {
-    return await this.userService.logout(dto.refreshToken, request.user);
+  async logout(@Body() dto: RefreshTokenDto, @User() user: UserEntity) {
+    return await this.userService.logout(dto.refreshToken, user);
   }
 
   @ApiBearerAuth()
@@ -65,8 +64,8 @@ export class UserController {
   @ApiUnauthorizedResponse({ description: 'Неизвестный или просроченный refresh-token' })
   @UseGuards(JwtGuard)
   @Post('refresh')
-  async refresh(@Body() dto: RefreshTokenDto, @Req() request: FastifyRequest) {
-    return this.userService.refresh(dto.refreshToken, request.user);
+  async refresh(@Body() dto: RefreshTokenDto, @User() user: UserEntity) {
+    return this.userService.refresh(dto.refreshToken, user);
   }
 
   @ApiBearerAuth()
@@ -74,7 +73,7 @@ export class UserController {
   @ApiOperation({ summary: 'Удаление пользователя' })
   @ApiOkResponse({ description: '{ message: User successfully deleted }' })
   @Delete('/')
-  async delete(@Body() dto: DeleteUserDto) {
-    return this.userService.delete(dto.id);
+  async delete(@User() user: UserEntity) {
+    return this.userService.delete(user.id);
   }
 }

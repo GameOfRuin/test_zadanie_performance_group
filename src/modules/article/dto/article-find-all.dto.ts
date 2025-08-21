@@ -31,9 +31,10 @@ export class ArticleFindAllDto extends PaginationDto {
   @ApiPropertyOptional({
     description: 'Ключевые слова для фильтрации статей по тегам',
     type: String,
-    example: 'nestjs, redis',
+    isArray: true,
+    example: ['nestjs', 'redis'],
   })
-  @IsString()
+  @IsString({ each: true })
   @IsOptional()
-  tags?: string;
+  tags?: string[];
 }

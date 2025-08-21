@@ -8,9 +8,11 @@ import {
 } from 'sequelize-typescript';
 import { Visibility } from '../migrations/dictionary';
 import { UserEntity } from './user.entity';
+import { DataTypes } from 'sequelize';
 
 @Table({ tableName: 'articles' })
-export class ArticlesEntity extends Model {
+export class ArticleEntity extends Model {
+
   @Column({
     type: DataType.INTEGER,
     primaryKey: true,
@@ -35,19 +37,19 @@ export class ArticlesEntity extends Model {
     type: DataType.STRING,
     allowNull: false,
   })
-  public article: string;
+  public text: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.JSONB,
     allowNull: true,
   })
-  public tags?: string;
+  public tags?: string[];
 
   @Column({
     type: DataType.ENUM(...Object.values(Visibility)),
     allowNull: false,
   })
-  public visibility: string;
+  public visibility: Visibility;
 
   @ForeignKey(() => UserEntity)
   @Column({

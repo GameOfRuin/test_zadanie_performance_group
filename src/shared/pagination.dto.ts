@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import { IsNumber, IsOptional } from 'class-validator';
 
@@ -6,7 +6,7 @@ export class PaginationDto {
   @IsNumber()
   @Type(() => Number)
   @IsOptional()
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Лимит отображаемых элементов на странице. По умолчанию 10',
     example: 10,
   })
@@ -15,7 +15,7 @@ export class PaginationDto {
   @IsNumber()
   @Type(() => Number)
   @IsOptional()
-  @ApiProperty({
+  @ApiPropertyOptional({
     description: 'Смещение для пагинации (страница). По умолчанию 0',
     example: 0,
   })

@@ -2,10 +2,10 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { FindOptions, Includeable, Op } from 'sequelize';
 import { redisArticleKey, redisArticlesKey } from '../../cache/cache.keys';
 import { CacheService } from '../../cache/cache.service';
-import { ArticlesEntity, UserEntity } from '../../database/entities';
+import { ArticleEntity, UserEntity } from '../../database/entities';
+import { Visibility } from '../../database/migrations/dictionary';
 import { TimeInSeconds } from '../../shared';
-import { ArticleFindAllDto, CreateArticleDto } from './dto';
-import { ArticleUpdateDto } from './dto/article-update.dto';
+import { ArticleFindAllDto, ArticleUpdateDto, CreateArticleDto } from './dto';
 
 @Injectable()
 export class ArticleService {
@@ -21,55 +21,44 @@ export class ArticleService {
     },
   ];
 
-  async creatArticle(dto: CreateArticleDto, user: UserEntity) {
+  async creatArticle(dto: CreateArticleDto, userId: UserEntity['id']) {
     this.logger.log('Creating a new article');
 
-    if (dto.tags && Array.isArray(dto.tags)) {
-      dto.tags = dto.tags.join(',');
-    }
+    const article = await ArticleEntity.create({ ...dto, authorId: userId });
 
-    const newArticle = await ArticlesEntity.create({ ...dto, authorId: user.id });
-
-    return this.getArticleById(newArticle.id, user.id);
+    return this.getArticleById(article.id, userId);
   }
 
-  async getArticleById(articleId: ArticlesEntity['id'], userId?: UserEntity['id']) {
-    this.logger.log(`Reading article by id`);
+  async getArticleById(id: ArticleEntity['id'], userId?: UserEntity['id']) {
+    this.logger.log(`Reading article by id=${id}`);
 
-    const cacheTask = await this.redis.get<ArticlesEntity>(redisArticleKey(articleId));
+    const cache = await this.redis.get<ArticleEntity>(redisArticleKey(id));
 
-    if (cacheTask) {
-      if (cacheTask?.visibility === 'private') {
-        if (!userId) {
-          throw new NotFoundException(`Article not found id=${articleId}`);
-        }
+    if (cache) {
+      if (cache?.visibility === Visibility.private && !userId) {
+        throw new NotFoundException(`Article not found id=${id}`);
       }
-      return cacheTask;
+
+      return cache;
     }
+
     const options: FindOptions = {
-      where: { id: articleId },
+      where: {
+        id,
+        ...(userId
+          ? { visibility: { [Op.in]: [Visibility.private, Visibility.public] } }
+          : { visibility: Visibility.public }),
+      },
       include: [...this.joinAuthor],
     };
 
-    if (userId) {
-      options.where = {
-        ...options.where,
-        visibility: { [Op.in]: ['private', 'public'] },
-      };
-    } else {
-      options.where = {
-        ...options.where,
-        visibility: { [Op.like]: 'public' },
-      };
-    }
-
-    const task = await ArticlesEntity.findOne(options);
+    const task = await ArticleEntity.findOne(options);
 
     if (!task) {
       throw new NotFoundException('Article not found');
     }
 
-    await this.redis.set(redisArticleKey(articleId), task, {
+    await this.redis.set(redisArticleKey(id), task, {
       EX: 10 * TimeInSeconds.minute,
     });
 
@@ -77,15 +66,14 @@ export class ArticleService {
   }
 
   async updateArticle(
+    id: ArticleEntity['id'],
     dto: ArticleUpdateDto,
     userId: UserEntity['id'],
-    articleId: ArticlesEntity['id'],
   ) {
-    this.logger.log('Updating article');
+    this.logger.log(`Updating article id=${id}`);
 
-    const article = await ArticlesEntity.findOne({
-      where: { id: articleId },
-      raw: true,
+    const article = await ArticleEntity.findOne({
+      where: { id },
     });
     if (!article) {
       throw new NotFoundException('Cannot update article');
@@ -94,27 +82,26 @@ export class ArticleService {
     if (article.authorId !== userId) {
       throw new NotFoundException('You are not allowed to update this article');
     }
-    await ArticlesEntity.update(dto, {
-      where: { id: articleId },
-    });
 
-    await this.redis.delete(redisArticleKey(articleId));
+    await ArticleEntity.update(dto, { where: { id } });
 
-    return await this.getArticleById(articleId);
+    await this.redis.delete(redisArticleKey(id));
+
+    return await this.getArticleById(id);
   }
 
-  async delete(userId: UserEntity['id'], idArticle: ArticlesEntity['id']) {
-    this.logger.log('Request to delete article');
+  async delete(id: ArticleEntity['id'], userId: UserEntity['id']) {
+    this.logger.log(`Deleting article by id=${id}`);
 
-    const article = await this.getArticleById(idArticle);
+    const article = await this.getArticleById(id);
 
     if (article.authorId !== userId) {
       throw new NotFoundException('You are not allowed to delete this article');
     }
 
-    await this.redis.delete(redisArticleKey(idArticle));
-    await ArticlesEntity.destroy({
-      where: { id: idArticle },
+    await this.redis.delete(redisArticleKey(id));
+    await ArticleEntity.destroy({
+      where: { id: id },
     });
 
     return {
@@ -122,18 +109,15 @@ export class ArticleService {
     };
   }
 
-  async getAllArticle(query: ArticleFindAllDto, id?: UserEntity['id']) {
+  async getAllArticle(query: ArticleFindAllDto, userId?: UserEntity['id']) {
     this.logger.log('Getting articles');
 
     const { limit, offset, sortDirection, sortBy, tags } = query;
 
-    const article = await this.redis.get(redisArticlesKey(query));
+    const cache = await this.redis.get(redisArticlesKey(query, userId));
 
-    if (article) {
-      if (!id) {
-        return article.rows.filter((r) => r.visibility === 'public');
-      }
-      return article;
+    if (cache) {
+      return cache;
     }
 
     const options: FindOptions = {
@@ -141,27 +125,26 @@ export class ArticleService {
       limit,
       order: [[sortBy, sortDirection]],
       include: [...this.joinAuthor],
-      where: { visibility: 'public' },
+      where: { visibility: Visibility.public },
     };
 
-    if (id) {
+    if (userId) {
       options.where = {
         ...options.where,
-        visibility: { [Op.in]: ['private', 'public'] },
+        visibility: { [Op.in]: [Visibility.private, Visibility.public] },
       };
     }
 
-    if (tags) {
-      const likePattern = `%${tags}%`;
+    if (tags?.length) {
       options.where = {
         ...options.where,
-        [Op.or]: {
-          tags: { [Op.iLike]: likePattern },
+        tags: {
+          [Op.contains]: tags,
         },
       };
     }
 
-    const { rows, count: total } = await ArticlesEntity.findAndCountAll(options);
+    const { rows, count: total } = await ArticleEntity.findAndCountAll(options);
 
     const response = { total, limit, offset, rows };
     await this.redis.set(redisArticlesKey(query), response, {

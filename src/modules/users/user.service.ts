@@ -83,7 +83,7 @@ export class UserService {
     const { id } = user;
 
     await this.cacheService.set(
-      redisRefreshToken(tokens.refreshSecret),
+      redisRefreshToken(tokens.refreshToken),
       { id },
       {
         EX: TimeInSeconds.day,
@@ -100,7 +100,7 @@ export class UserService {
   }
 
   async delete(id: UserEntity['id']) {
-    this.logger.warn('Request to delete user');
+    this.logger.warn(`Request to delete user with id=${id}`);
 
     await UserEntity.destroy({ where: { id } });
 

@@ -34,8 +34,8 @@ module.exports = {
             allowNull: false,
           },
           [Columns.tags]: {
-            type: DataType.STRING,
-            allowNull: false,
+            type: DataType.JSONB,
+            allowNull: true,
           },
           [Columns.visibility]: {
             type: DataType.STRING,
@@ -45,7 +45,7 @@ module.exports = {
             type: DataType.STRING,
             allowNull: true,
           },
-          [Columns.article]: {
+          [Columns.text]: {
             type: DataType.STRING,
             allowNull: false,
           },

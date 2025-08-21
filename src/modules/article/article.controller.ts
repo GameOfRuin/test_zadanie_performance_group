@@ -19,11 +19,18 @@ import {
   ApiOperation,
 } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
-import { JwtGuard, OptinolJwtGuard } from '../../guards/jwt.guard';
+import { UserEntity } from '../../database/entities';
+import { User } from '../../decorators';
 import { IdNumberDto } from '../../shared';
 import { ArticleService } from './article.service';
-import { ArticleFindAllDto, ArticleResponseDto, CreateArticleDto } from './dto';
-import { ArticleUpdateDto } from './dto/article-update.dto';
+import {
+  ArticleFindAllDto,
+  ArticleResponseDto,
+  ArticleUpdateDto,
+  CreateArticleDto,
+} from './dto';
+import { JwtGuard } from '../../guards/jwt.guard';
+import { OptionalJwtGuard } from '../../guards/jwt.optionalguard';
 
 @Controller('article')
 export class ArticleController {
@@ -37,8 +44,8 @@ export class ArticleController {
   })
   @ApiOperation({ summary: 'Создание новой статьи' })
   @Post('create')
-  async creatArticle(@Body() dto: CreateArticleDto, @Req() request: FastifyRequest) {
-    return this.articleService.creatArticle(dto, request.user);
+  async creatArticle(@Body() dto: CreateArticleDto, @User() user: UserEntity) {
+    return this.articleService.creatArticle(dto, user.id);
   }
 
   @ApiBearerAuth()
@@ -47,11 +54,13 @@ export class ArticleController {
     type: ArticleResponseDto,
   })
   @ApiNotFoundResponse({ description: 'Article not found' })
-  @UseGuards(OptinolJwtGuard)
+  @UseGuards(OptionalJwtGuard)
   @Get('/:id')
-  async getArticleById(@Param() { id }: IdNumberDto, @Req() request: FastifyRequest) {
-    const userId = request.user?.id;
-    return await this.articleService.getArticleById(id, userId);
+  async getArticleById(
+    @Param() { id }: IdNumberDto,
+    @User() user: UserEntity | undefined,
+  ) {
+    return await this.articleService.getArticleById(id, user?.id);
   }
 
   @ApiBearerAuth()
@@ -60,8 +69,8 @@ export class ArticleController {
   @ApiOkResponse({ description: 'Статья успешно удалена' })
   @ApiForbiddenResponse({ description: 'Нет прав на удаление статьи' })
   @Delete('/:id')
-  async delete(@Req() request: FastifyRequest, @Param() { id }: IdNumberDto) {
-    return this.articleService.delete(request.user.id, id);
+  async delete(@Param() { id }: IdNumberDto, @User() user: UserEntity) {
+    return this.articleService.delete(id, user.id);
   }
 
   @ApiBearerAuth()
@@ -74,15 +83,15 @@ export class ArticleController {
   })
   @Put('/:id')
   async updateArticle(
-    @Body() dto: ArticleUpdateDto,
-    @Req() request: FastifyRequest,
     @Param() { id }: IdNumberDto,
+    @Body() dto: ArticleUpdateDto,
+    @User() user: UserEntity,
   ) {
-    return await this.articleService.updateArticle(dto, request.user.id, id);
+    return await this.articleService.updateArticle(id, dto, user.id);
   }
 
   @ApiBearerAuth()
-  @UseGuards(OptinolJwtGuard)
+  @UseGuards(OptionalJwtGuard)
   @ApiOkResponse({
     description: 'Список статей',
     type: ArticleResponseDto,
