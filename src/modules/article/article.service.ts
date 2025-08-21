@@ -30,7 +30,7 @@ export class ArticleService {
 
     const newArticle = await ArticlesEntity.create({ ...dto, authorId: user.id });
 
-    return this.getArticleById(newArticle.id);
+    return this.getArticleById(newArticle.id, user.id);
   }
 
   async getArticleById(articleId: ArticlesEntity['id'], userId?: UserEntity['id']) {
@@ -127,6 +127,15 @@ export class ArticleService {
 
     const { limit, offset, sortDirection, sortBy, tags } = query;
 
+    const article = await this.redis.get(redisArticlesKey(query));
+
+    if (article) {
+      if (!id) {
+        return article.rows.filter((r) => r.visibility === 'public');
+      }
+      return article;
+    }
+
     const options: FindOptions = {
       offset,
       limit,
@@ -140,15 +149,6 @@ export class ArticleService {
         ...options.where,
         visibility: { [Op.in]: ['private', 'public'] },
       };
-    }
-
-    const article = await this.redis.get(redisArticlesKey(query));
-
-    if (article) {
-      if (!id) {
-        return article.rows.filter((r) => r.visibility === 'public');
-      }
-      return article;
     }
 
     if (tags) {
