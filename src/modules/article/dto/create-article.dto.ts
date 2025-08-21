@@ -21,14 +21,12 @@ export class CreateArticleDto {
   })
   description?: string;
 
-  @IsString()
-  @MaxLength(50)
   @IsOptional()
   @ApiPropertyOptional({
-    description: 'Теги статьи через запятую (до 50 символов)',
+    description: 'Теги статьи передавать через массив, максимум 20 тегов',
     example: 'астрономия, космос, черные дыры',
   })
-  tags?: string;
+  tags?: string[] | string;
 
   @IsEnum(Visibility)
   @ApiProperty({

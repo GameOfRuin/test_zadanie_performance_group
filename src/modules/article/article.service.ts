@@ -24,7 +24,9 @@ export class ArticleService {
   async creatArticle(dto: CreateArticleDto, user: UserEntity) {
     this.logger.log('Creating a new article');
 
-    dto.tags = Array.isArray(dto.tags) ? dto.tags.join(',') : dto.tags;
+    if (dto.tags && Array.isArray(dto.tags)) {
+      dto.tags = dto.tags.join(',');
+    }
 
     const newArticle = await ArticlesEntity.create({ ...dto, authorId: user.id });
 
@@ -32,7 +34,7 @@ export class ArticleService {
   }
 
   async getArticleById(articleId: ArticlesEntity['id'], userId?: UserEntity['id']) {
-    this.logger.log(`Reading article by id=${articleId}`);
+    this.logger.log(`Reading article by id`);
 
     const cacheTask = await this.redis.get<ArticlesEntity>(redisArticleKey(articleId));
 
