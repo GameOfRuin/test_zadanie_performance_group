@@ -10,7 +10,7 @@ async function bootstrap() {
   bootstrapSwagger(app);
   bootstrapPipes(app);
 
-  await app.listen(appConfig.port);
+  await app.listen(appConfig.port, '0.0.0.0');
 }
 
 bootstrap();
